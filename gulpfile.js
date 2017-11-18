@@ -61,7 +61,7 @@ gulp.task("minImages", () => {
 
 gulp.task("serve", ["sass", "prepScripts", "minImages"], () => {
 	browserSync.init({
-		proxy: "anim.dev"
+		server: { baseDir: "./" }
 	});
 	gulp.watch('src/scss/**/*.scss', ["sass"]);
 	gulp.watch('src/js/*.js', ["prepScripts"]);
@@ -79,12 +79,6 @@ gulp.task("clean", () => {
 		'css/style.css*',
 		'js/script.js*'
 	]);
-});
-
-gulp.task("browser-sync", () => {
-	browserSync.init({
-		proxy: "anim.dev"
-	});
 });
 
 gulp.task("build", [ "minScripts", "minStyles" ], () => {

@@ -1,1 +1,0 @@
-"use strict";console.log("deps loaded..."),function(){var e=document.querySelector("h1").textContent;console.log(e.toUpperCase())}();
