@@ -54,7 +54,7 @@ gulp.task("minStyles", ["sass"], () => {
 });
 
 gulp.task("minImages", () => {
-	gulp.src('src/images/*')
+	return gulp.src('src/images/*')
 		.pipe(imagemin())
 		.pipe(gulp.dest('images/'))
 });
@@ -66,10 +66,16 @@ gulp.task("serve", ["sass", "prepScripts", "minImages"], () => {
 	gulp.watch('src/scss/**/*.scss', ["sass"]);
 	gulp.watch('src/js/*.js', ["prepScripts"]);
 	gulp.watch('src/images/*', ["minImages"]);
+	gulp.watch('src/fonts/*', ["copyfonts"]);
 	gulp.watch('css/style.css').on('change', browserSync.reload);
 	gulp.watch('js/script.js').on('change', browserSync.reload);
 	gulp.watch('index.html').on('change', browserSync.reload);
 	gulp.watch('images/*').on('change', browserSync.reload);
+});
+
+gulp.task("copyfonts", ()=> {
+	return gulp.src('src/fonts/**')
+		.pipe(gulp.dest('./fonts'));
 });
 
 gulp.task("clean", () => {
@@ -81,11 +87,11 @@ gulp.task("clean", () => {
 	]);
 });
 
-gulp.task("build", [ "minScripts", "minStyles" ], () => {
+gulp.task("build", [ "copyfonts", "minScripts", "minStyles", "minImages" ], () => {
 	return gulp.src([
 			'css/style.css',
+			'fonts/**',
 			'images/**',
-			'inc/**',
 			'js/script.js',
 			'style.css',
 			'index.html'
