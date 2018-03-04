@@ -25,12 +25,55 @@ main {
 	flex:1;
 }
 
-.alan {
-	min-width: 800px;
-	img {
+.alan-wrap {
+	max-width: 1200px;
+	margin: 0 auto;
+	@include Grid( none, 1, '.alan', true );
+	@include Grid( 'small', 2, '.alan', true );
+	@include Grid( 'medium', 4, '.alan', true );
+	img { 
 		width: 100%;
+		margin-bottom: $gutter; 
 	}
 }
+
+.grid {
+	.four, .three, .two, .one, .mixed {
+		span {
+			min-height: 20px;
+			display: block;
+			margin-bottom: $gutter;
+		}
+	}
+	.four, .mixed {
+		@include Grid( none, 1, '.col', true );
+		@include Grid( 'small', 2, '.col', true );
+		@include Grid( 'medium', 4, '.col', true );
+		span { background-color: rgb(200, 0, 0); }
+	}
+	.three {
+		@include Grid( none, 1, '.col', true );
+		@include Grid( 'small', 2, '.col', true );
+		@include Grid( 'medium', 3, '.col', true );
+		span { background-color: rgb(0, 200, 0); }
+	}
+	.two {
+		@include Grid( none, 1, '.col', true );
+		@include Grid( 'small', 2, '.col', true );
+		@include Grid( 'medium', 2, '.col', true );
+		span { background-color: rgb(0, 0, 200); }
+	}
+	.mixed {
+		span { background-color: rgb(250, 100, 50); }
+		@include respond-to(medium) {
+			.spans-3 { 
+				@include Grid-item( 'medium', 3 );
+			}
+		}
+	}
+}
+
+
 
 footer {
 	width: 100%;
