@@ -1,15 +1,17 @@
 {
-  "name": "vi_starter",
+  "name": "Front-end starter",
   "version": "1.0.0",
-  "description": "A starter WordPress theme with Gulp & bunch of stuff",
-  "main": "index.php",
-  "author": "Victor Ivanov <hi@vctr.is>",
+  "description": "Front-end starter template w. Gulp, Babel & Browserify",
+  "main": "index.html",
+  "author": "Victor Ivanov (Malt Creative) <victor@maltcreative.com.au>",
   "license": "GPL-2.0",
   "private": false,
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-preset-env": "^1.6.0",
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
+    "babelify": "^10.0.0",
     "browser-sync": "^2.18.13",
+    "browserify": "^16.2.3",
     "del": "^3.0.0",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^4.0.0",
@@ -20,6 +22,12 @@
     "gulp-rename": "^1.2.2",
     "gulp-sass": "^3.1.0",
     "gulp-sourcemaps": "^2.6.1",
-    "gulp-uglify": "^3.0.0"
+    "gulp-uglify": "^3.0.0",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "object-fit-images": "^3.2.3"
   }
 }

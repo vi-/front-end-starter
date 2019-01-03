@@ -1,33 +1,34 @@
 'use strict';
 
-const gulp 					= require('gulp'),
-			concat 				= require('gulp-concat'),
-			uglify 				= require('gulp-uglify'),
-			rename 				= require('gulp-rename'),
-			sass 					= require('gulp-sass'),
+const gulp					= require('gulp'),
+			uglify				= require('gulp-uglify'),
+			rename				= require('gulp-rename'),
+			sass					= require('gulp-sass'),
 			maps					= require('gulp-sourcemaps'),
-			babel					= require('gulp-babel'),
+			babelify			= require('babelify'),
 			del 					=	require('del'),
 			cssnano				=	require('gulp-cssnano'),
 			browserSync 	= require('browser-sync').create(),
 			autoprefixer	= require('gulp-autoprefixer'),
-			imagemin			= require('gulp-imagemin');
+			imagemin			= require('gulp-imagemin'),
+			browserify 		= require('browserify'),
+			source 				= require('vinyl-source-stream'),
+			buffer 				= require('vinyl-buffer');
 
-gulp.task("prepScripts", () => {
-	return gulp.src([ 
-		'src/js/dependencies.js', 
-		'src/js/myscript.js'])
-	.pipe(maps.init())
-	.pipe(babel())
-	.pipe(concat('script.js'))
-	.pipe(maps.write('.'))
-	.pipe(gulp.dest("js"));
-});
-
-gulp.task("minScripts", ["prepScripts"], () => {
-	return gulp.src("js/script.js")
-		.pipe(uglify())
-		.pipe(gulp.dest('js'));
+gulp.task( "scripts", () => {
+  const b = browserify({
+    entries: './src/js/myscript.js',
+    debug: true,
+    transform: [babelify]
+  });
+  return b.bundle()
+    .pipe(source('script.js'))
+    .pipe(buffer())
+    .pipe(maps.init({ loadMaps: true }))
+      // transforms
+      //.pipe(uglify())
+    .pipe(maps.write('./'))
+    .pipe(gulp.dest( './js/' ));
 });
 
 gulp.task("sass", () => {
@@ -35,14 +36,14 @@ gulp.task("sass", () => {
 		.pipe(maps.init())
 		.pipe(sass().on('error', function(err) {
 			console.error(err.message);
-    	browserSync.notify(err.message, 3000);
-    	this.emit('end');
+			browserSync.notify(err.message, 3000);
+			this.emit('end');
 		}))
 		.pipe(rename('style.css'))
 		.pipe(autoprefixer({
-            browsers: ['last 2 versions'],
-            cascade: false
-    }))
+						browsers: ['last 2 versions'],
+						cascade: false
+		}))
 		.pipe(maps.write('./'))
 		.pipe(gulp.dest('css'));
 });
@@ -59,12 +60,12 @@ gulp.task("minImages", () => {
 		.pipe(gulp.dest('images/'))
 });
 
-gulp.task("serve", ["sass", "prepScripts", "minImages"], () => {
+gulp.task("serve", ["sass", "scripts", "minImages"], () => {
 	browserSync.init({
 		server: { baseDir: "./" }
 	});
 	gulp.watch('src/scss/**/*.scss', ["sass"]);
-	gulp.watch('src/js/*.js', ["prepScripts"]);
+	gulp.watch('src/js/**/*.js', ["scripts"]);
 	gulp.watch('src/images/*', ["minImages"]);
 	gulp.watch('src/fonts/*', ["copyfonts"]);
 	gulp.watch('css/style.css').on('change', browserSync.reload);
@@ -87,7 +88,7 @@ gulp.task("clean", () => {
 	]);
 });
 
-gulp.task("build", [ "copyfonts", "minScripts", "minStyles", "minImages" ], () => {
+gulp.task("build", [ "copyfonts", "scripts", "minStyles", "minImages" ], () => {
 	return gulp.src([
 			'css/style.css',
 			'fonts/**',

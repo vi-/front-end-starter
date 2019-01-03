@@ -1,4 +1,4 @@
-(() => { 
-	let x = document.querySelector('h1').textContent; 
-	console.log( x.toUpperCase() ); 
-})();
+require("babel-polyfill");
+
+const ex = require("./modules/example.js");
+ex.exampleModule();
