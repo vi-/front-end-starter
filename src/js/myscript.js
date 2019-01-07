@@ -4,5 +4,9 @@ const objectFitImages = require("object-fit-images");
 
 objectFitImages();
 
-const ex = require("./modules/example.js");
-ex.exampleModule();
+const nav = require("./modules/navigation.js");
+
+const burger 	= document.querySelector('.hamburger'),
+			navEl 	= document.querySelector('.site-nav')
+
+nav.init( burger, navEl );
