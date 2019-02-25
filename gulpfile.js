@@ -3,7 +3,6 @@
 const { series, parallel, src, dest, watch } = require( 'gulp' );
 
 const	uglify				= require( 'gulp-uglify' ),
-			rename				= require( 'gulp-rename' ),
 			sass					= require( 'gulp-sass' ),
 			maps					= require( 'gulp-sourcemaps' ),
 			babelify			= require( 'babelify' ),
@@ -24,20 +23,20 @@ const serveSite = ( cb ) => {
 }
 
 const compileCSS = () => {
-	return src( 'src/scss/main.scss' )
+	return src( 'src/scss/style.scss' )
 		.pipe( maps.init() )
 		.pipe( sass().on( 'error', function(err) {
 			console.error( err.message );
 			browserSync.notify( err.message, 3000 );
 			this.emit( 'end' );
 		}))
-		.pipe(rename( 'style.css' ))
 		.pipe(autoprefixer({
 						browsers: [ 'last 2 versions' ],
 						cascade: false
 		}))
 		.pipe(maps.write( './' ))
-		.pipe(dest( 'css' ));
+		.pipe(dest( 'css' ))
+		.pipe(browserSync.stream());
 }
 
 const minifyCSS = () => {
@@ -50,8 +49,14 @@ const compileJS = () => {
 	const b = browserify({
 	  entries: './src/js/myscript.js',
 	  debug: true,
-	  transform: [babelify]
-	});
+	}).transform( 'babelify', { presets: [
+		[
+			'@babel/preset-env', {
+				useBuiltIns: 'usage'
+			}
+		]
+	]});
+
 	return b.bundle()
 	  .pipe(source( 'script.js' ))
 	  .pipe(buffer())
@@ -77,13 +82,15 @@ const copyFonts = () => {
 		.pipe( dest( './fonts' ) );
 }
 
+const browserReload = ( done ) => {
+	browserSync.reload();
+	done();
+}
+
 const watchFiles = () => {
 	watch( 'src/scss/**/*.scss', compileCSS );
-	watch( 'css/style.css' ).on( 'change', browserSync.reload );
-	watch( 'src/js/**/*.js', compileJS );
-	watch( 'js/script.js' ).on( 'change', browserSync.reload );
-	watch( 'src/images/*', minifyImages );
-	watch( 'images/*' ).on( 'change', browserSync.reload );
+	watch( 'src/js/**/*.js', series( compileJS, minifyJS, browserReload ) );
+	watch( 'src/images/*', series( minifyImages, browserReload ) );
 	watch( 'src/fonts/*', copyFonts );
 	console.log( '👀 Watching files 👀' );
 }
@@ -108,10 +115,9 @@ const build = () => {
 	.pipe(dest( 'dist' ));
 }
 
-exports.default = series( parallel( compileCSS, compileJS ), serveSite );
+exports.default = series( parallel( compileCSS, compileJS ), minifyJS, serveSite );
 exports.build 	= series(
 	parallel( compileCSS, compileJS ), 
 	parallel( minifyCSS, minifyJS ),
-	parallel( copyFonts, minifyImages ),
-	build
+	parallel( copyFonts, minifyImages )
 );
