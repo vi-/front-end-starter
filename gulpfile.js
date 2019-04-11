@@ -73,8 +73,13 @@ const minifyJS = () => {
 
 const minifyImages = () => {
 	return src( 'src/images/*' )
-		.pipe(imagemin())
-		.pipe(dest( 'images/' ));
+		.pipe( imagemin() )
+		.pipe( dest( 'images/' ) );
+}
+
+const moveImages = () => {
+  return src( 'src/images/*' )
+    .pipe( dest( 'images/' ) );
 }
 
 const copyFonts = () => {
@@ -96,29 +101,39 @@ const watchFiles = () => {
 	console.log( '👀 Watching files 👀' );
 }
 
-const clean = () => {
+const clean = (done) => {
 	del([
 		'dist',
 		'images',
 		'css/style.css*',
 		'js/script.js*'
-	]);
+  ]);
+  done();
 }
 
-const build = () => {
+const buildDest = () => {
 	return src([
 			'css/style.css',
 			'fonts/**',
 			'images/**',
 			'js/script.js',
-			'index.html'
+      'index.html',
+      'favicon.ico'
 		], { base: './' })
 	.pipe(dest( 'dist' ));
 }
 
-exports.default = series( parallel( compileCSS, compileJS ), minifyJS, serveSite );
+exports.default = series( 
+  moveImages,
+  parallel( compileCSS, compileJS ), 
+  minifyJS, 
+  serveSite 
+);
+
 exports.build 	= series(
+  clean,
 	parallel( compileCSS, compileJS ), 
 	parallel( minifyCSS, minifyJS ),
-	parallel( copyFonts, minifyImages )
+  parallel( copyFonts, minifyImages ),
+  buildDest
 );
