@@ -13,7 +13,8 @@ const	uglify				= require( 'gulp-uglify' ),
 			imagemin			= require( 'gulp-imagemin' ),
 			browserify 		= require( 'browserify' ),
 			source 				= require( 'vinyl-source-stream' ),
-			buffer 				= require( 'vinyl-buffer' );
+			buffer 				= require( 'vinyl-buffer' ),
+			fs						= require( 'fs' );
 
 const serveSite = ( cb ) => {
 	browserSync.init({
@@ -112,15 +113,15 @@ const clean = (done) => {
 }
 
 const buildDest = () => {
-	return src([
+	let files = [
 			'css/style.css',
 			'fonts/**',
 			'images/**',
 			'js/script.js',
-      'index.html',
-      'favicon.ico'
-		], { base: './' })
-	.pipe(dest( 'dist' ));
+			'index.html'
+	];
+	if ( fs.existsSync('favicon.ico') ) files.push('favicon.ico');
+	return src(files, { base: './' }).pipe(dest( 'dist' ));
 }
 
 exports.default = series( 
