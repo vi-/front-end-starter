@@ -1,11 +1,13 @@
-const objectFitImages = require("object-fit-images");
+import objectFitImages from "object-fit-images";
+
+import nav from "./modules/navigation.js";
+import { getYear, getMediaQuery, debounce } from "./modules/helpers.js";
+
+const burger 	= document.querySelector('.hamburger'),
+	  	navEl 	= document.querySelector('.site-nav');
+
 
 objectFitImages();
 
-const nav 	= require("./modules/navigation.js");
-const h 	= require("./modules/helpers.js");
-
-const burger 	= document.querySelector('.hamburger'),
-	  navEl 	= document.querySelector('.site-nav');
-
 nav.init( burger, navEl );
+console.log( getYear() )

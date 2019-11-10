@@ -2,19 +2,74 @@
 
 const { series, parallel, src, dest, watch } = require( 'gulp' );
 
-const	uglify				= require( 'gulp-uglify' ),
-			sass					= require( 'gulp-sass' ),
-			maps					= require( 'gulp-sourcemaps' ),
-			babelify			= require( 'babelify' ),
-			del 					=	require( 'del' ),
-			cssnano				=	require( 'gulp-cssnano' ),
+const	sass					= require( 'gulp-sass' ),
+			atImport 			= require( 'postcss-import' ),
+			autoprefixer	= require( 'autoprefixer' ),
 			browserSync 	= require( 'browser-sync' ).create(),
-			autoprefixer	= require( 'gulp-autoprefixer' ),
+			cssnano				=	require( 'cssnano' ),
+			postcss 			= require( 'gulp-postcss' ),
+			replace 			= require( 'gulp-replace' ),
+			resolve 			= require( 'rollup-plugin-node-resolve' ),
+			rollup 				= require( 'rollup' ),
+			commonjs 			= require( 'rollup-plugin-commonjs' ),
+			babel 				= require( 'rollup-plugin-babel' ),
+			uglify				= require( 'rollup-plugin-uglify' ),
+			maps					= require( 'gulp-sourcemaps' ),
+			del 					=	require( 'del' ),
 			imagemin			= require( 'gulp-imagemin' ),
-			browserify 		= require( 'browserify' ),
-			source 				= require( 'vinyl-source-stream' ),
-			buffer 				= require( 'vinyl-buffer' ),
 			fs						= require( 'fs' );
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+const basePaths = {
+	src: './src/',
+	dest: './'
+}
+const paths = {
+	scripts: {
+		src: 		`${basePaths.src}js/**/*.js`,
+		dest: 	`${basePaths.dest}js/`,
+		entry: 	`${basePaths.src}js/myscript.js`,
+		exit: 	`${basePaths.dest}js/script.js`
+	},
+	styles: {
+		entry: 	`${basePaths.src}scss/style.scss`,
+		dest: 	`${basePaths.dest}css/`
+	}
+}
+
+const config = {
+	rollup: {
+		bundle: {
+			input: paths.scripts.entry,
+			plugins: [
+				resolve( {
+					mainFields: [ 'module', 'jsnext:main', 'main'  ]
+				} ),
+				commonjs(),
+				babel( {
+					exclude: 'node_modules/**',
+				} ),
+			],
+		},
+		write: {
+			file: paths.scripts.exit,
+			format: 'iife',
+			globals: {
+				jquery: 'jQuery',
+			},
+			sourcemap: isProduction ? true : 'inline',
+		},
+	}
+}
+
+// Modify build process for Production
+if ( isProduction ) config.rollup.bundle.plugins.push( uglify.uglify() );
+
+async function compileJS() {
+	const bundle = await rollup.rollup( config.rollup.bundle );
+	await bundle.write( config.rollup.write );
+}
 
 const serveSite = ( cb ) => {
 	browserSync.init({
@@ -24,63 +79,27 @@ const serveSite = ( cb ) => {
 }
 
 const compileCSS = () => {
-	return src( 'src/scss/style.scss' )
+	return src([ paths.styles.entry ] )
 		.pipe( maps.init() )
 		.pipe( sass().on( 'error', function(err) {
 			console.error( err.message );
 			browserSync.notify( err.message, 3000 );
 			this.emit( 'end' );
 		}))
-		.pipe(autoprefixer({
-						browsers: [ 'last 2 versions' ],
-						cascade: false
-		}))
+		.pipe(postcss([
+      autoprefixer(),
+      atImport(),
+      cssnano()
+    ]))
 		.pipe(maps.write( './' ))
-		.pipe(dest( 'css' ))
+		.pipe(dest( paths.styles.dest ))
 		.pipe(browserSync.stream());
 }
 
-const minifyCSS = () => {
-	return src( 'css/style.css' )
-		.pipe(cssnano())
-		.pipe(dest( 'css' ));
-}
-
-const compileJS = () => {
-	const b = browserify({
-	  entries: './src/js/myscript.js',
-	  debug: true,
-	}).transform( 'babelify', { presets: [
-		[
-			'@babel/preset-env', {
-				useBuiltIns: 'usage'
-			}
-		]
-	]});
-
-	return b.bundle()
-	  .pipe(source( 'script.js' ))
-	  .pipe(buffer())
-	  .pipe(maps.init({ loadMaps: true }))
-	  .pipe(maps.write( './' ))
-	  .pipe(dest( './js/' ));
-}
-
-const minifyJS = () => {
-	return src( 'js/script.js' )
-		.pipe(uglify())
-		.pipe(dest('js'));
-}
-
 const minifyImages = () => {
-	return src( 'src/images/*' )
-		.pipe( imagemin() )
-		.pipe( dest( 'images/' ) );
-}
-
-const moveImages = () => {
-  return src( 'src/images/*' )
-    .pipe( dest( 'images/' ) );
+	return src( `${basePaths.src}/images/*` )
+		.pipe(imagemin())
+		.pipe(dest( `${basePaths.dest}images/` ));
 }
 
 const copyFonts = () => {
@@ -95,7 +114,7 @@ const browserReload = ( done ) => {
 
 const watchFiles = () => {
 	watch( 'src/scss/**/*.scss', compileCSS );
-	watch( 'src/js/**/*.js', series( compileJS, minifyJS, browserReload ) );
+	watch( 'src/js/**/*.js', series( compileJS, browserReload ) );
 	watch( 'src/images/*', series( minifyImages, browserReload ) );
 	watch( 'src/fonts/*', copyFonts );
 	watch( 'index.html', browserReload );
@@ -125,16 +144,13 @@ const buildDest = () => {
 }
 
 exports.default = series( 
-  moveImages,
-  parallel( compileCSS, compileJS ), 
-  minifyJS, 
-  serveSite 
+	parallel( compileCSS, compileJS, minifyImages ), 
+	serveSite 
 );
 
 exports.build 	= series(
   clean,
 	parallel( compileCSS, compileJS ), 
-	parallel( minifyCSS, minifyJS ),
   parallel( copyFonts, minifyImages ),
   buildDest
 );
