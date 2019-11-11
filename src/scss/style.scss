@@ -2,86 +2,99 @@
 @import "variables/variables";
 @import "mixins/mixins";
 
-*, *:after, *:before {
+*,
+*:after,
+*:before {
   @include box-sizing(border-box);
 }
 
 body {
-	background-color: #fff;
-	font-family: sans-serif;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	min-height:100vh;
-	font-size: 16px;
-	color: rgba(0,0,0,0.95);
+  background-color: #fff;
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.95);
 }
 
 a {
-	text-decoration: none;
-	color: #5eabed;
+  text-decoration: none;
+  color: #5eabed;
 }
 main {
-	flex:1;
+  flex: 1;
 }
 
 .alan-wrap {
-	max-width: 1200px;
-	margin: 0 auto;
-	@include Grid( none, 1, '.alan', true );
-	@include Grid( 'small', 2, '.alan', true );
-	@include Grid( 'medium', 4, '.alan', true );
-	img { 
-		width: 100%;
-		margin-bottom: $gutter; 
-	}
+  max-width: 1200px;
+  margin: 0 auto;
+  @include Grid(none, 1, ".alan", true);
+  @include Grid("small", 2, ".alan", true);
+  @include Grid("medium", 4, ".alan", true);
+  img {
+    width: 100%;
+    margin-bottom: $gutter;
+  }
 }
 
 .grid {
-	.four, .three, .two, .one, .mixed {
-		span {
-			min-height: 20px;
-			display: block;
-			margin-bottom: $gutter;
-		}
-	}
-	.four, .mixed {
-		@include Grid( none, 1, '.col', true );
-		@include Grid( 'small', 2, '.col', true );
-		@include Grid( 'medium', 4, '.col', true );
-		span { background-color: rgb(200, 0, 0); }
-	}
-	.three {
-		@include Grid( none, 1, '.col', true );
-		@include Grid( 'small', 2, '.col', true );
-		@include Grid( 'medium', 3, '.col', true );
-		span { background-color: rgb(0, 200, 0); }
-	}
-	.two {
-		@include Grid( none, 1, '.col', true );
-		@include Grid( 'small', 2, '.col', true );
-		@include Grid( 'medium', 2, '.col', true );
-		span { background-color: rgb(0, 0, 200); }
-	}
-	.mixed {
-		span { background-color: rgb(250, 100, 50); }
-		@include respond-to(medium) {
-			.spans-3 { 
-				@include Grid-item( 'medium', 3 );
-			}
-		}
-	}
+  .four,
+  .three,
+  .two,
+  .one,
+  .mixed {
+    span {
+      min-height: 20px;
+      display: block;
+      margin-bottom: $gutter;
+    }
+  }
+  .four,
+  .mixed {
+    @include Grid(none, 1, ".col", true);
+    @include Grid("small", 2, ".col", true);
+    @include Grid("medium", 4, ".col", true);
+    span {
+      background-color: rgb(200, 0, 0);
+    }
+  }
+  .three {
+    @include Grid(none, 1, ".col", true);
+    @include Grid("small", 2, ".col", true);
+    @include Grid("medium", 3, ".col", true);
+    span {
+      background-color: rgb(0, 200, 0);
+    }
+  }
+  .two {
+    @include Grid(none, 1, ".col", true);
+    @include Grid("small", 2, ".col", true);
+    @include Grid("medium", 2, ".col", true);
+    span {
+      background-color: rgb(0, 0, 200);
+    }
+  }
+  .mixed {
+    span {
+      background-color: rgb(250, 100, 50);
+    }
+    @include respond-to(medium) {
+      .spans-3 {
+        @include Grid-item("medium", 3);
+      }
+    }
+  }
 }
 
-
-
 footer {
-	width: 100%;
-	color: #fff;
-	text-align: center;
-	background-color: #1a1a1a;
-	font-size: 0.7em;
-	text-transform: uppercase;
+  width: 100%;
+  color: #fff;
+  text-align: center;
+  background-color: #1a1a1a;
+  font-size: 0.7em;
+  text-transform: uppercase;
 }
 
 @import "partials/navigation";

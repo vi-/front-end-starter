@@ -1,156 +1,149 @@
-'use strict';
+"use strict";
 
-const { series, parallel, src, dest, watch } = require( 'gulp' );
+const { series, parallel, src, dest, watch } = require("gulp");
 
-const	sass					= require( 'gulp-sass' ),
-			atImport 			= require( 'postcss-import' ),
-			autoprefixer	= require( 'autoprefixer' ),
-			browserSync 	= require( 'browser-sync' ).create(),
-			cssnano				=	require( 'cssnano' ),
-			postcss 			= require( 'gulp-postcss' ),
-			replace 			= require( 'gulp-replace' ),
-			resolve 			= require( 'rollup-plugin-node-resolve' ),
-			rollup 				= require( 'rollup' ),
-			commonjs 			= require( 'rollup-plugin-commonjs' ),
-			babel 				= require( 'rollup-plugin-babel' ),
-			uglify				= require( 'rollup-plugin-uglify' ),
-			maps					= require( 'gulp-sourcemaps' ),
-			del 					=	require( 'del' ),
-			imagemin			= require( 'gulp-imagemin' ),
-			fs						= require( 'fs' );
+// prettier-ignore
+const	atImport      = require( 'postcss-import' ),
+      autoprefixer  = require( 'autoprefixer' ),
+      babel         = require( 'rollup-plugin-babel' ),
+      browserSync   = require( 'browser-sync' ).create(),
+      commonjs      = require( 'rollup-plugin-commonjs' ),
+      cssnano       =	require( 'cssnano' ),
+      del           =	require( 'del' ),
+      fs            = require( 'fs' ),
+      imagemin      = require( 'gulp-imagemin' ),
+      maps          = require( 'gulp-sourcemaps' ),
+      postcss       = require( 'gulp-postcss' ),
+      replace       = require( 'gulp-replace' ),
+      resolve       = require( 'rollup-plugin-node-resolve' ),
+      rollup        = require( 'rollup' ),
+      sass          = require( 'gulp-sass' ),
+      uglify        = require( 'rollup-plugin-uglify' );
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === "production";
 
 const basePaths = {
-	src: './src/',
-	dest: './'
-}
+  src: "./src/",
+  dest: "./"
+};
 const paths = {
-	scripts: {
-		src: 		`${basePaths.src}js/**/*.js`,
-		dest: 	`${basePaths.dest}js/`,
-		entry: 	`${basePaths.src}js/myscript.js`,
-		exit: 	`${basePaths.dest}js/script.js`
-	},
-	styles: {
-		entry: 	`${basePaths.src}scss/style.scss`,
-		dest: 	`${basePaths.dest}css/`
-	}
-}
+  scripts: {
+    src: `${basePaths.src}js/**/*.js`,
+    dest: `${basePaths.dest}js/`,
+    entry: `${basePaths.src}js/myscript.js`,
+    exit: `${basePaths.dest}js/script.js`
+  },
+  styles: {
+    entry: `${basePaths.src}scss/style.scss`,
+    dest: `${basePaths.dest}css/`
+  }
+};
 
 const config = {
-	rollup: {
-		bundle: {
-			input: paths.scripts.entry,
-			plugins: [
-				resolve( {
-					mainFields: [ 'module', 'jsnext:main', 'main'  ]
-				} ),
-				commonjs(),
-				babel( {
-					exclude: 'node_modules/**',
-				} ),
-			],
-		},
-		write: {
-			file: paths.scripts.exit,
-			format: 'iife',
-			globals: {
-				jquery: 'jQuery',
-			},
-			sourcemap: isProduction ? true : 'inline',
-		},
-	}
-}
+  rollup: {
+    bundle: {
+      input: paths.scripts.entry,
+      plugins: [
+        resolve({
+          mainFields: ["module", "jsnext:main", "main"]
+        }),
+        commonjs(),
+        babel({
+          exclude: "node_modules/**"
+        })
+      ]
+    },
+    write: {
+      file: paths.scripts.exit,
+      format: "iife",
+      globals: {
+        jquery: "jQuery"
+      },
+      sourcemap: isProduction ? true : "inline"
+    }
+  }
+};
 
 // Modify build process for Production
-if ( isProduction ) config.rollup.bundle.plugins.push( uglify.uglify() );
+if (isProduction) config.rollup.bundle.plugins.push(uglify.uglify());
 
 async function compileJS() {
-	const bundle = await rollup.rollup( config.rollup.bundle );
-	await bundle.write( config.rollup.write );
+  const bundle = await rollup.rollup(config.rollup.bundle);
+  await bundle.write(config.rollup.write);
 }
 
-const serveSite = ( cb ) => {
-	browserSync.init({
-		server: { baseDir: "./" }
-	});
-	watchFiles();
-}
+const serveSite = cb => {
+  browserSync.init({
+    server: { baseDir: "./" }
+  });
+  watchFiles();
+};
 
 const compileCSS = () => {
-	return src([ paths.styles.entry ] )
-		.pipe( maps.init() )
-		.pipe( sass().on( 'error', function(err) {
-			console.error( err.message );
-			browserSync.notify( err.message, 3000 );
-			this.emit( 'end' );
-		}))
-		.pipe(postcss([
-      autoprefixer(),
-      atImport(),
-      cssnano()
-    ]))
-		.pipe(maps.write( './' ))
-		.pipe(dest( paths.styles.dest ))
-		.pipe(browserSync.stream());
-}
+  return src([paths.styles.entry])
+    .pipe(maps.init())
+    .pipe(
+      sass().on("error", function(err) {
+        console.error(err.message);
+        browserSync.notify(err.message, 3000);
+        this.emit("end");
+      })
+    )
+    .pipe(postcss([autoprefixer(), atImport(), cssnano()]))
+    .pipe(maps.write("./"))
+    .pipe(dest(paths.styles.dest))
+    .pipe(browserSync.stream());
+};
 
 const minifyImages = () => {
-	return src( `${basePaths.src}/images/*` )
-		.pipe(imagemin())
-		.pipe(dest( `${basePaths.dest}images/` ));
-}
+  return src(`${basePaths.src}/images/*`)
+    .pipe(imagemin())
+    .pipe(dest(`${basePaths.dest}images/`));
+};
 
 const copyFonts = () => {
-	return src( 'src/fonts/**' )
-		.pipe( dest( './fonts' ) );
-}
+  return src("src/fonts/**").pipe(dest("./fonts"));
+};
 
-const browserReload = ( done ) => {
-	browserSync.reload();
-	done();
-}
+const browserReload = done => {
+  browserSync.reload();
+  done();
+};
 
 const watchFiles = () => {
-	watch( 'src/scss/**/*.scss', compileCSS );
-	watch( 'src/js/**/*.js', series( compileJS, browserReload ) );
-	watch( 'src/images/*', series( minifyImages, browserReload ) );
-	watch( 'src/fonts/*', copyFonts );
-	watch( 'index.html', browserReload );
-	console.log( '👀 Watching files 👀' );
-}
+  watch("src/scss/**/*.scss", compileCSS);
+  watch("src/js/**/*.js", series(compileJS, browserReload));
+  watch("src/images/*", series(minifyImages, browserReload));
+  watch("src/fonts/*", copyFonts);
+  watch("index.html", browserReload);
+  console.log("👀 Watching files 👀");
+};
 
-const clean = (done) => {
-	del([
-		'dist',
-		'images',
-		'css/style.css*',
-		'js/script.js*'
-  ]);
+const clean = done => {
+  del(["dist", "images", "css/style.css*", "js/script.js*"]);
   done();
-}
+};
 
 const buildDest = () => {
-	let files = [
-			'css/style.css',
-			'fonts/**',
-			'images/**',
-			'js/script.js',
-			'index.html'
-	];
-	if ( fs.existsSync('favicon.ico') ) files.push('favicon.ico');
-	return src(files, { base: './' }).pipe(dest( 'dist' ));
-}
+  let files = [
+    "css/style.css",
+    "fonts/**",
+    "images/**",
+    "js/script.js",
+    "index.html"
+  ];
+  if (fs.existsSync("favicon.ico")) files.push("favicon.ico");
+  return src(files, { base: "./" }).pipe(dest("dist"));
+};
 
-exports.default = series( 
-	parallel( compileCSS, compileJS, minifyImages ), 
-	serveSite 
+exports.default = series(
+  parallel(compileCSS, compileJS, minifyImages),
+  serveSite
 );
 
-exports.build 	= series(
+exports.build = series(
   clean,
-	parallel( compileCSS, compileJS ), 
-  parallel( copyFonts, minifyImages ),
+  parallel(compileCSS, compileJS),
+  parallel(copyFonts, minifyImages),
   buildDest
 );
